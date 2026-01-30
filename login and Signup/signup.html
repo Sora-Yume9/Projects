@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up Page</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        #Main {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #box,
+        #box2 {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #stop {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: none;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #stop:hover {
+            background-color: #45a049;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="Main">
+        <h2>Sign Up</h2>
+        <input type="text" id="box" placeholder="Email">
+        <input type="password" id="box2" placeholder="Password">
+        <input type="button" id="stop" value="Sign Up">
+        <p>Already have an account? <a href="/">Login</a></p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        document.getElementById("stop").onclick = function () {
+            const textBox = document.getElementById("box2");
+            const password = textBox.value;
+            const textBox1 = document.getElementById("box");
+            const email = textBox1.value;
+
+            if (email && password != ""){
+                socket.emit('signup', { email, password });
+            }
+
+        };
+
+
+        socket.on('signupResult', (data) => {
+            if (data.message === 'Account created successfully') {
+                alert(data.message);
+                window.location.assign("/");
+            } else {
+                alert(data.message);
+            }
+        });
+    </script>
+</body>
+
+</html>

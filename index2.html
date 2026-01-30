@@ -1,0 +1,68 @@
+<textarea id="message" rows="4" cols="50" placeholder="Messages"></textarea>
+<input type="button" value="Send" id="Send">
+<textarea id="recived" rows="4" cols="50" placeholder="Replies" readonly></textarea>
+<script src="https://code.responsivevoice.org/responsivevoice.js?"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+
+<style>
+  #message {
+    width: 300px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  #Send {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  #recived {
+    width: 300px;
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+</style>
+
+<script>
+  const socket = io("http://localhost:3000", { path: "/.netlify/functions/api/socket" });
+
+
+  let num = 1;
+
+  document.getElementById("Send").onclick = () => {
+    let textbox = document.getElementById("message").value;
+   
+    socket.emit("transferControl", { Messagedata: textbox });
+  };
+
+  socket.on("Transmission", (data) => {
+    if (data.message !== "") {
+      let text = data.message;
+      let recived = document.getElementById("recived");
+
+      recived.value += "Message" + " " + num + ":" + " " + text + "\n";
+      num++;
+      responsiveVoice.speak(text);
+    }
+  });
+</script>

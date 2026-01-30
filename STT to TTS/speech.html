@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Speech Recognition</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+</head>
+<script src="https://code.responsivevoice.org/responsivevoice.js?"></script>
+<body>
+    <h1>WebRTC Speech Recognition</h1>
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    <input type="checkbox" id="Resp">Real Voice
+    <input type="checkbox" id="Espeak">Espeak Voice
+    <p id="transcription"></p>
+
+    <script>
+        let Resp = false
+        let Espeak = false
+        let recognition;
+        let socket = io("localhost:5000"); 
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const transcriptionOutput = document.getElementById('transcription');
+
+        startButton.addEventListener('click', startRecording);
+        stopButton.addEventListener('click', stopRecording);
+        document.getElementById("Resp").onclick = ()=>{
+            if(Resp === false){
+                Resp = true
+            }
+            else{
+                Resp = false
+            }
+
+        }
+        document.getElementById("Espeak").onclick = ()=>{
+            if(Espeak === false){
+                Espeak = true
+            }
+            else{
+                Espeak = false
+            }
+
+        }
+       
+
+        function startRecording() {
+            recognition = new webkitSpeechRecognition() || new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.continuous = true;
+            recognition.interimResults = false;
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[event.results.length - 1][0].transcript;
+                console.log(`You said: ${transcript}`);
+                transcriptionOutput.textContent = `You said: ${transcript}`;
+                if (Resp === true){
+                    responsiveVoice.speak(transcript);
+                }
+                else if (Resp === false) {
+                    if (Espeak === false) {
+                    socket.emit("Signal", { voice: transcript,Espeak:"False" });
+                    }
+                    else{
+                    socket.emit("Signal", { voice: transcript,Espeak:"True" });
+                    }
+                    
+                }
+                
+            };
+
+            recognition.onend = () => {
+                console.log('Speech recognition ended.');
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+            };
+
+            recognition.start();
+
+            startButton.disabled = true;
+            stopButton.disabled = false;
+        }
+
+        function stopRecording() {
+            if (recognition) {
+                recognition.stop();
+            }
+
+            startButton.disabled = false;
+            stopButton.disabled = true;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+
+        #Main {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #box,
+        #box2 {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        #stop {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+            border: none;
+            background-color: #4caf50;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #stop:hover {
+            background-color: #45a049;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="Main">
+        <h2>Login</h2>
+        <input type="text" id="box" placeholder="Email" value="farzanabanolhv@gmail.com">
+        <input type="password" id="box2" placeholder="Password" value="1234nm,.">
+        <input type="button" id="stop" value="Login">
+        <p>Don't have an account? <a href="/Signup">Signup</a></p>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io("http://localhost:3000");
+
+        document.getElementById("stop").onclick = function () {
+            const textBox = document.getElementById("box2");
+            const loginPassword = textBox.value;
+            const textBox1 = document.getElementById("box");
+            const loginEmail = textBox1.value;
+            if (loginEmail && loginPassword != ""){
+
+                socket.emit('login', { loginEmail, loginPassword });
+            }
+           
+            
+        };
+
+    
+        socket.on('loginResult', (data) => {
+            if (data.message === 'Account does not exist') {
+                alert(data.message);
+            } else if (data.message === 'yes') {
+                alert("Account found");
+                window.location.assign("/Note");
+            }
+        });
+    </script>
+</body>
+
+</html>

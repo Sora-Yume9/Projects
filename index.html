@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s;
+    }
+
+    body.dark-mode {
+      background-color: #121212;
+      color: #fff;
+    }
+
+    #container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #message, #received {
+      width: 300px;
+      height: 100px;
+      margin: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      resize: none;
+    }
+
+    #Send, #DarkMode {
+      width: 320px;
+      height: 40px;
+      margin: 10px;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #Send {
+      background-color: #e53935; /* Red color */
+      color: #fff;
+    }
+
+    #Send:hover {
+      background-color: #c62828; /* Slightly darker shade on hover */
+    }
+
+    #DarkMode {
+      background-color: #555; /* Gray color */
+      color: #fff;
+    }
+
+    #DarkMode:hover {
+      background-color: #333; /* Slightly darker shade on hover */
+    }
+  </style>
+</head>
+<body>
+
+<div id="container">
+  <textarea id="message" placeholder="Text Message"></textarea>
+  <input type="button" value="Send" id="Send" />
+  <input type="button" value="Dark Mode" id="DarkMode" onclick="toggleDarkMode()" />
+  <textarea id="received" placeholder="Replies" readonly></textarea>
+</div>
+
+<script src="https://code.responsivevoice.org/responsivevoice.js?"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+<script>
+  const socket = io("https://nodejs--contactsalihass.repl.co");
+
+  let hasConfirmed = false;
+  let num = 1;
+
+  document.getElementById("Send").onclick = () => {
+    let text = document.getElementById("message").value;
+    socket.emit("CalltotheHorizon", { Seacondmessagedata: text });
+  };
+
+  socket.on("Transmission", (data) => {
+    if (data.firstsignal !== "") {
+      let text = data.firstsignal;
+      let received = document.getElementById("received");
+
+      received.value += "Message " + num + ": " + text + "\n";
+      num++;
+      responsiveVoice.speak(text);
+    }
+  });
+
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark-mode");
+  }
+</script>
+
+</body>
+</html>

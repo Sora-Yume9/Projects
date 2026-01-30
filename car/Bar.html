@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+<style>
+body{
+    margin: 0;
+    overflow: hidden;
+    background: darkgray;
+    text-align: center;
+}
+.canvas{
+    background: lightgray;
+}
+#save {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+        
+        }
+
+        #discard {
+            position: absolute;
+            top: 0px;
+            left: 40px;
+ 
+        }
+        #apply {
+            position: absolute;
+            top: 0px;
+            left: 80px;
+ 
+        }
+</style>
+<body>
+    <canvas class="canvas" id="canvas"></canvas>
+    <input type="button" id="save" value="Save">
+    <input type="button" id="discard" value="Save">
+    <input type="button" id="apply" value="apply">
+
+</body>
+</html>
+<script>
+    tf.setBackend("cpu")
+function save() {
+
+    let score = best.brain.getWeights();
+
+
+    for (let i = 1; i < cars.length; i++) {
+        let mutatedWeights = mutateWeights(score);
+        console.log(mutatedWeights)
+        cars[i].brain.setWeights(mutatedWeights);
+    }
+}
+function randomGaussian() {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random(); // Converting [0,1) to (0,1)
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+}
+
+
+const canvas = document.getElementById("canvas")
+canvas.width = window.innerWidth
+let forward = false
+let left = false
+let right = false
+let back = false
+const actions = ['up', 'down', 'left', 'right'];
+let up_train = 0
+let down_train = 0
+let left_train = 0
+let right_train = 0
+let controls
+
+let best
+document.onkeydown = function(event){
+    switch(event.key) {
+
+        case 'd':
+            left_train=0.03
+           left = true
+            break;
+            case 'w':
+            up_train=0.2
+           forward = true
+            break;
+            case 'a':
+            right_train=0.03
+            right = true
+            break;
+            case 's':
+            down_train=0.2
+           back = true
+            break;
+
+    
+    }
+
+
+}
+document.onkeyup = function(event){
+    switch(event.key) {
+        case 'd':
+        left_train=0
+           left = false
+            break;
+            case 'w':
+            up_train=0
+    
+           forward = false
+            break;
+            case 'a':
+            right_train=0
+    
+            right = false
+            break;
+            case 's':
+            down_train=0
+           back = false
+            break;
+    
+    }
+    
+
+}
+
+const ctx = canvas.getContext("2d")
+const cars = [];
+function argmax(array) {
+  return tf.tensor1d(array).argMax().dataSync()[0];
+}
+function expectedReturn(state, action, reward, discount, nextState) {
+  return reward + discount * Math.max(Q(nextState).dataSync());
+}
+
+function generateCars(count) {
+
+   for(i =0;i<count; i++) {
+let model = tf.sequential();
+        model.add(tf.layers.dense({ units: 8,inputDim:3 ,activation: "tanh" }));
+        model.add(tf.layers.dense({ units: 4, activation: "sigmoid" }));
+        model.compile({ loss: 'binaryCrossentropy', optimizer: 'adam'});
+        
+    cars.push({
+    carx:100,
+    cary:500,
+    carheight:50,
+    carwidth:30,
+    speed:0,
+    maxspeed:5,
+    friction:0.05,
+    angle:0,
+    acc:0.2,
+    damaged:false,
+    brain:model,
+    fitness:0
+      
+        });
+  
+    }
+}
+
+
+generateCars(1);
+
+let bestCar = cars[0]
+
+document.getElementById("save").onclick=function(){
+    console.log(pair)
+    console.log(action_pair)
+}
+
+document.getElementById("discard").onclick = function () {
+
+};
+let data_gather = true;
+
+document.getElementById("apply").onclick = function () {
+cars[0].carx = 100
+cars[0].cary = 500
+cars[0].angle = 0
+cars[0].speed = 0
+let X_train = tf.tensor2d(pair)
+let Y_train = tf.tensor2d(action_pair)
+cars[0].brain.fit(X_train, Y_train,{
+    epochs:1000,
+}).then(() =>{
+    data_gather = false;   
+})
+
+ 
+
+
+};
+
+
+let pair = []
+let action_pair = []
+let state
+function update(car){
+    controls = [up_train, down_train, left_train, right_train]
+
+    if (!car.damaged && forward == false && data_gather == false){
+    pre = car.brain.predict(state).dataSync();
+
+    if(pre[0]){
+        car.speed+=pre[0]
+    }
+    if(pre[1]){
+        car.speed-=pre[1]
+    }
+    if(pre[2]){
+        car.angle-=pre[2]
+    }
+    if(pre[3]){
+        car.angle+=pre[3]
+    }
+    car.maxspeed =5
+    }
+    if(forward == true){
+   car.speed+=car.acc
+
+   }
+   if(back == true){
+    car.speed-=car.acc
+
+   }
+   if(car.speed>car.maxspeed){
+    car.speed = car.maxspeed
+   }
+   if(car.speed<-car.maxspeed/2){
+    car.speed =-car.maxspeed/2
+   }
+   if (car.speed>0){
+    car.speed-=car.friction
+   }
+   if (car.speed<0){
+    car.speed+=car.friction
+   }
+   if(Math.abs(car.speed)<car.friction){
+    car.speed =0
+   }
+  if(car.speed!=0){
+    pair.push(state.dataSync())
+    action_pair.push(controls)
+    const flip=car.speed>0?1:-1;
+    if(left == true){
+    car.angle -= 0.03
+
+   }
+    if(right == true){
+    car.angle +=0.03
+   }
+  }
+
+
+  car.carx -= Math.sin(car.angle) * car.speed;
+   car.cary -= Math.cos(car.angle) * car.speed;
+   if (car.damaged == true) {
+    car.maxspeed =0
+   car.speed = 0
+     
+    }
+   
+   }
+   let borders = [];
+  
+   function draw(){
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    let startX = 200;
+    let startY = 80;
+    ctx.moveTo(startX, startY);
+    let endX =  200; 
+    let endY = 550; 
+    ctx.lineTo(endX, endY);
+    ctx.stroke()
+    ctx.beginPath()
+    let startX2 = 200;
+    let startY2 = 80;
+    ctx.moveTo(startX2, startY2);
+    let endX2 =  1250; 
+    let endY2 = 80; 
+    ctx.lineTo(endX2, endY2);
+    ctx.stroke()
+    ctx.beginPath()
+    let startX3 = 1250;
+    let startY3 = 550;
+    ctx.moveTo(startX3, startY3);
+    let endX3 =  1250; 
+    let endY3 = 80; 
+    ctx.lineTo(endX3, endY3);
+    ctx.stroke()
+    ctx.beginPath()
+    let startX4 = 1250;
+    let startY4 = 550;
+    ctx.moveTo(startX3, startY3);
+    let endX4 =  200; 
+    let endY4 = 550; 
+    ctx.lineTo(endX4, endY4);
+    ctx.stroke()
+    ctx.beginPath()
+    let startXout = 10;
+    let startYout = 10;
+    ctx.moveTo(startXout, startYout);
+    let endXout =  1350; 
+    let endYout = 10; 
+    ctx.lineTo(endXout, endYout);
+    ctx.stroke()
+    ctx.beginPath()
+    let startXout2 = 1350;
+    let startYout2 = 10;
+    ctx.moveTo(startXout2, startYout2);
+    let endXout2 =  1340; 
+    let endYout2 = 650; 
+    ctx.lineTo(endXout2, endYout2);
+    ctx.stroke()
+    ctx.beginPath()
+    let startXout3 = 1340;
+    let startYout3 = 650;
+    ctx.moveTo(startXout3, startYout3);
+    let endXout3 =  10; 
+    let endYout3 = 650; 
+    ctx.lineTo(endXout3, endYout3);
+    ctx.stroke()
+    ctx.beginPath()
+    let startXout4 = 10;
+    let startYout4 = 10;
+    ctx.moveTo(startXout4, startYout4);
+    let endXout4 =  10; 
+    let endYout4 = 650; 
+    ctx.lineTo(endXout4, endYout4);
+    ctx.stroke()
+    innertopleft = {x:startX, y:startY}
+    innerbottomleft = {x:endX, y:endY}
+innertopup = {x:startX2, y:startY2}
+innerbottomup = {x:endX2, y:endY2}
+innertopright = {x:startX3, y:startY3}
+innerbottomright = {x:endX3, y:endY3}
+innertopdown = {x:startX4, y:startY4}
+innerbottomdown = {x:endX4, y:endY4}
+outerTopleft = {x:startXout, y:startYout}
+outerBottomleft = {x:endXout, y:endYout}
+outerTopup = {x:startXout2, y:startYout2}
+outerBottomup = {x:endXout2, y:endYout2}
+outerTopright = {x:startXout3, y:startYout3}
+outerBottomright = {x:endXout3, y:endYout3}
+outerTopdown = {x:startXout4, y:startYout4}
+outerBottomdown = {x:endXout4, y:endYout4}
+    
+    borders = [
+       [innertopleft,innerbottomleft,innertopup,innerbottomup,innertopright,innerbottomright,innertopdown,innerbottomdown],
+       [outerTopleft, outerBottomleft, outerTopup, outerBottomup, outerTopright, outerBottomright, outerTopdown, outerBottomdown]
+    ]
+
+  
+    }
+
+    function createpolygon(car){
+    
+
+
+      
+        const points = []
+        const rad = Math.hypot(car.carwidth,car.carheight)/2
+        const alpha = Math.atan2(car.carwidth,car.carheight)
+     points.push({
+        x:car.carx-Math.sin(car.angle-alpha)*rad,
+        y:car.cary-Math.cos(car.angle-alpha)*rad
+
+     });
+     points.push({
+        x:car.carx-Math.sin(car.angle+alpha)*rad,
+        y:car.cary-Math.cos(car.angle+alpha)*rad
+
+     });
+     points.push({
+        x:car.carx-Math.sin(Math.PI+car.angle-alpha)*rad,
+        y:car.cary-Math.cos(Math.PI+car.angle-alpha)*rad,
+
+     });
+     points.push({
+        x:car.carx-Math.sin(Math.PI+car.angle+alpha)*rad,
+        y:car.cary-Math.cos(Math.PI+car.angle+alpha)*rad,
+
+     });
+     return points
+    
+    }
+    
+    function getintersection(A,B,C,D){ 
+    const tTop=(D.x-C.x)*(A.y-C.y)-(D.y-C.y)*(A.x-C.x);
+    const uTop=(C.y-A.y)*(A.x-B.x)-(C.x-A.x)*(A.y-B.y);
+    const bottom=(D.y-C.y)*(B.x-A.x)-(D.x-C.x)*(B.y-A.y);
+
+    
+    if(bottom!=0){
+        const t=tTop/bottom;
+        const u=uTop/bottom;
+        if(t>=0 && t<=1 && u>=0 && u<=1){
+            return {
+                x:lerp(A.x,B.x,t),
+                y:lerp(A.y,B.y,t),
+                offset:t
+            }
+        }
+    }
+
+    return null;
+}
+document.getElementById("save").value=0 
+
+function sensors(car) {
+    raycount = 3;
+    let readings = [];
+    raylength = 200;
+    rayspread = Math.PI / 4
+        rays = [];
+
+    for (let i = 0; i < raycount; i++) {
+        const rayAngle = lerp(
+            -rayspread / 2,
+            rayspread / 2,
+            i / (raycount - 1)
+        ) + car.angle;
+
+        const start = { x: car.carx, y: car.cary };
+        const end = {
+            x: car.carx - Math.sin(rayAngle) * raylength,
+            y: car.cary - Math.cos(rayAngle) * raylength
+        };
+
+        rays.push({ start, end });
+    }
+    for (let i = 0; i < rays.length; i++) {
+        let end = rays[i].end;
+        if (readings[i]) {
+            end = readings[i].end;
+        }
+        ctx.beginPath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "yellow";
+        ctx.moveTo(rays[i].start.x, rays[i].start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+
+  
+  
+        
+    }
+
+    for (let i = 0; i < rays.length; i++) {
+        readings.push(
+            read(rays[i], borders)
+        );
+    
+    }
+   
+const offsets = readings.map(
+    s => s == null ? 0 : 1 - s.offset
+);
+state = tf.tensor2d([offsets]);
+
+
+
+
+
+
+
+    function read(ray, borders) {
+    let touches = [];
+    
+    for (let i = 0; i < borders.length; i++) {
+        for (let j = 0; j < borders[i].length; j += 2) {
+            const touch = getintersection(
+                ray.start,
+                ray.end,
+                borders[i][j],
+                borders[i][j + 1]
+            );
+
+            if (touch) {
+                
+                touches.push(touch);
+             
+              
+                ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(touch.x, touch.y,5,0,6);
+        ctx.fill();
+   
+            }
+        }
+    }
+
+    if (touches.length === 0) {
+        return null;
+    } else {
+        const offsets = touches.map((e) => e.offset);
+        const minoffset = Math.min(...offsets);
+        return touches.find((e) => e.offset === minoffset);
+       
+    }
+
+  
+}
+ 
+}
+
+
+
+
+
+
+
+
+
+
+
+function lerp(start, end, t) {
+    return start * (1 - t) + end * t;
+}
+function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function polysIntersect(poly1, poly2) {
+    for (let i = 0; i < poly1.length; i++) {
+        for (let j = 0; j < poly2.length; j += 2) {
+            const touch = getintersection(
+                poly1[i],
+                poly1[(i + 1) % poly1.length],
+                poly2[j],
+                poly2[j + 1]
+            );
+           
+            if (touch) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+function damaged(points) {
+     
+    for (let i = 0; i < borders.length; i++) {
+        if (polysIntersect(points, borders[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+let l = false
+function areAllCarsDamaged() {
+    for (let i = 0; i < cars.length; i++) {
+        if (!cars[i].damaged) {
+            return false;
+        }
+    }
+    if(l = true){
+        return true;
+    }
+    return true;
+}
+ 
+function calculateFitness(car) {
+   
+    return car.carx - car.cary;
+}
+ 
+    function animate() {  
+
+        canvas.height = window.innerHeight;
+        draw()
+
+        for (let o=0;o<cars.length;o++){
+        cars[o].fitness = cars[o].carx - cars[o].cary;
+        let bestCar = cars.reduce((max, car) => car.fitness > max.fitness ? car : max, cars[0]);
+        best = bestCar
+        sensors(cars[o])
+            update(cars[o]);
+            const points = createpolygon(cars[o])
+            ctx.beginPath()
+            ctx.moveTo(points[0].x,points[0].y)
+        
+
+    
+
+for (let i=1;i<points.length;i++)
+{
+    ctx.lineTo(points[i].x,points[i].y)
+}
+if (damaged(points)) {
+ctx.fillStyle = "gray";
+cars[o].damaged = true
+cars[o].fitness -= 1
+
+} else {
+ctx.fillStyle = "blue";  
+cars[o].damaged = false
+
+}
+
+ctx.fill()
+
+
+
+
+        }
+
+
+ 
+    
+        if (areAllCarsDamaged()) {
+    document.getElementById("save").value++;
+
+  prev = best.brain
+    let bestWeights = best.brain.getWeights();
+
+    for (let i = 0; i < cars.length; i++) {
+        let parentWeights = [];
+        cars[i].carx = 100;
+        cars[i].cary = 500;
+        cars[i].angle = 0;
+//         function mutate(car){
+//        const curr = best.brain.getWeights();
+//        const mutatedweights = []
+//         for(j=0;j<curr.length;j++){
+           
+//             let tensor = curr[j];
+//             let shape = curr[j].shape;
+//             let values = tensor.dataSync().slice()
+//             for(k=0;k<values.length;k++){
+//                 let w = values[k]
+//                 if(Math.random()* 2 - 1 >0.60){
+//                     values[k]= w+randomGaussian()
+//                 }
+                
+//             }
+//             let newTensor = tf.tensor(values,shape)
+//             mutatedweights[j] = newTensor
+            
+//         }
+//         car.brain.setWeights(mutatedweights)
+        
+        
+// }
+// mutate(cars[i])
+ 
+    }
+}
+
+
+  
+
+
+
+
+        
+    requestAnimationFrame(animate);
+
+}
+
+animate();
+
+
+
+
+</script>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reinforcement Learning with Q-learning</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+
+</head>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: darkgray;
+        text-align: center;
+    }
+
+    .canvas {
+        background: lightgray;
+    }
+</style>
+<body>
+    <canvas class="canvas" id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        let dots = []
+        function generatedots(){
+            dots.push({
+
+            })
+
+        }
+        
+        let x = 600;
+        let y = 500;
+        let targetX = 600;
+        let targetY = 10;
+        
+        
+        let forward = false;
+        let left = false;
+        let right = false;
+        let back = false;
+
+        const model = tf.sequential();
+        model.add(tf.layers.dense({ units: 8, inputDim: 2, activation: "tanh" }));
+        model.add(tf.layers.dense({ units: 4, activation: "sigmoid" }));
+        
+        
+       
+
+        document.onkeydown = function (event) {
+            switch (event.key) {
+                case 'a':
+                    left = true;
+                    break;
+                case 'w':
+                    forward = true;
+                    break;
+                case 'd':
+                    right = true;
+                    break;
+                case 's':
+                    back = true;
+                    break;
+            }
+        };
+
+        document.onkeyup = function (event) {
+            switch (event.key) {
+                case 'a':
+                    left = false;
+                    break;
+                case 'w':
+                    forward = false;
+                    break;
+                case 'd':
+                    right = false;
+                    break;
+                case 's':
+                    back = false;
+                    break;
+            }
+        };
+
+        function control() {
+            if (left) {
+                x -= 10;
+            }
+            if (right) {
+                x += 10;
+            }
+            if (forward) {
+                y -= 10;
+            }
+            if (back) {
+                y += 10;
+            }
+
+        
+            if (y > 500) {
+                y = 500;
+            }
+            if (x < 600) {
+                x = 600;
+            }
+            if (x > 650) {
+                x = 650;
+            }
+            if (x === 600 && y < 10) {
+                x = 600;
+                y = 500;
+            }
+        }
+
+ 
+
+        function anime() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            control();
+
+
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.arc(targetX, targetY, 5, 0, 6);
+            ctx.fillStyle = "black";
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, 6);
+            ctx.fillStyle = "red";
+            ctx.fill();
+        
+           
+            requestAnimationFrame(anime);
+        }
+
+        anime();
+    </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<body>
+    <input type="text" id="text" value="">
+    <input type="button" id="button" value="button">
+</body>
+
+
+<script>
+        const { ipcRenderer } = require('electron');
+        document.addEventListener('keydown', (event) => {
+
+if (event.key){
+
+    let text = "hello"
+    ipcRenderer.send('synthesize-text', text);
+}
+})
+</script>

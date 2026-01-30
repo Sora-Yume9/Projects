@@ -1,0 +1,14 @@
+<script src="https://code.responsivevoice.org/responsivevoice.js?"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+<script>
+
+  const socket = io("http://localhost:3000");
+
+  socket.on("eventHorizon", (data) => {
+    if (data.message !== "") {
+      const text = data.message;
+      responsiveVoice.speak(text, "UK English Male");
+    }
+  });
+
+</script>

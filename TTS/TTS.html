@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text-to-Speech App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 50px;
+            transition: background-color 0.3s ease;
+        }
+
+        #recived {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        #button,
+        #dark-mode-toggle,
+        #voice-select {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            margin: 5px;
+        }
+
+        #button {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        #button:hover {
+            background-color: #c0392b;
+        }
+
+        #dark-mode-toggle {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        #dark-mode-toggle:hover {
+            background-color: #34495e;
+        }
+
+        #voice-select {
+            background-color: #3498db;
+            color: white;
+        }
+
+        #voice-select:hover {
+            background-color: #2980b9;
+        }
+
+        body.dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+
+        /* Center the elements */
+        #button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        #button-container > * {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Text-to-Speech App</h1>
+    <textarea id="recived" placeholder="Enter Text"></textarea>
+    <br>
+    <div id="button-container">
+        <button id="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <input type="button" id="button" value="Speak">
+        <select id="voice-select">
+            <!-- Options will be dynamically added here -->
+        </select>
+    </div>
+    
+    <script src="https://code.responsivevoice.org/responsivevoice.js?"></script>
+    <script>
+        document.getElementById("button").onclick = () => {
+            let text = document.getElementById("recived").value;
+            let selectedVoiceIndex = document.getElementById("voice-select").value;
+            let voices = responsiveVoice.getVoices();
+
+            if (selectedVoiceIndex >= 0 && selectedVoiceIndex < voices.length) {
+                let selectedVoice = voices[selectedVoiceIndex].name;
+                responsiveVoice.speak(text, selectedVoice);
+            }
+        }
+
+        document.getElementById("recived").addEventListener("input", function() {
+            this.style.height = "auto";
+            this.style.height = (this.scrollHeight) + "px";
+        });
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+
+        
+        const voices = [
+            { name: 'UK English Female' },
+            { name: 'UK English Male' },
+            { name: 'US English Female' },
+            { name: 'US English Male' },
+            { name: 'Arabic Male' },
+            { name: 'Arabic Female' },
+            { name: 'Armenian Male' },
+            { name: 'Australian Female' },
+            { name: 'Australian Male' },
+            { name: 'Bangla Bangladesh Female' },
+            { name: 'Bangla Bangladesh Male' },
+            { name: 'Bangla India Female' },
+            { name: 'Bangla India Male' },
+            { name: 'Brazilian Portuguese Female' },
+            { name: 'Chinese Female' },
+            { name: 'Chinese Male' },
+            { name: 'Chinese (Hong Kong) Female' },
+            { name: 'Chinese (Hong Kong) Male' },
+            { name: 'Chinese Taiwan Female' },
+            { name: 'Chinese Taiwan Male' },
+            { name: 'Czech Female' },
+            { name: 'Danish Female' },
+            { name: 'Deutsch Female' },
+            { name: 'Deutsch Male' },
+            { name: 'Dutch Female' },
+            { name: 'Dutch Male' },
+            { name: 'Estonian Male' },
+            { name: 'Filipino Female' },
+            { name: 'Finnish Female' },
+            { name: 'French Female' },
+            { name: 'French Male' },
+            { name: 'French Canadian Female' },
+            { name: 'French Canadian Male' },
+            { name: 'Greek Female' },
+            { name: 'Hindi Female' },
+            { name: 'Hindi Male' },
+            { name: 'Hungarian Female' },
+            { name: 'Indonesian Female' },
+            { name: 'Indonesian Male' },
+            { name: 'Italian Female' },
+            { name: 'Italian Male' },
+            { name: 'Japanese Female' },
+            { name: 'Japanese Male' },
+            { name: 'Korean Female' },
+            { name: 'Korean Male' },
+            { name: 'Latin Male' },
+            { name: 'Nepali' },
+            { name: 'Norwegian Female' },
+            { name: 'Norwegian Male' },
+            { name: 'Polish Female' },
+            { name: 'Polish Male' },
+            { name: 'Portuguese Female' },
+            { name: 'Portuguese Male' },
+            { name: 'Romanian Female' },
+            { name: 'Russian Female' },
+            { name: 'Sinhala' },
+            { name: 'Slovak Female' },
+            { name: 'Spanish Female' },
+            { name: 'Spanish Latin American Female' },
+            { name: 'Spanish Latin American Male' },
+            { name: 'Swedish Female' },
+            { name: 'Swedish Male' },
+            { name: 'Tamil Female' },
+            { name: 'Tamil Male' },
+            { name: 'Thai Female' },
+            { name: 'Thai Male' },
+            { name: 'Turkish Female' },
+            { name: 'Turkish Male' },
+            { name: 'Ukrainian Female' },
+            { name: 'Vietnamese Female' },
+            { name: 'Vietnamese Male' },
+            { name: 'Afrikaans Male' },
+            { name: 'Albanian Male' },
+            { name: 'Bosnian Male' },
+            { name: 'Catalan Male' },
+            { name: 'Croatian Male' },
+            { name: 'Esperanto Male' },
+            { name: 'Icelandic Female' },
+            { name: 'Latvian Male' },
+            { name: 'Macedonian Male' },
+            { name: 'Moldavian Female' },
+            { name: 'Montenegrin Male' },
+            { name: 'Serbian Male' },
+            { name: 'Serbo-Croatian Male' },
+            { name: 'Swahili Male' },
+            { name: 'Welsh Male' },
+        ];
+
+    
+        var voiceSelect = document.getElementById("voice-select");
+
+        voices.forEach(function(voice, index) {
+            var option = document.createElement("option");
+            option.value = index;
+            option.text = voice.name;
+            voiceSelect.add(option);
+        });
+    </script>
+</body>
+</html>
